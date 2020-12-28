@@ -117,7 +117,7 @@ def load_dataset(tokenizer, random_seed, path=None):
         print('df value counts: ')
         print(df_news.label.value_counts())
 
-        df_sample = df_news.groupby("label").sample(n=5000, random_state=random_seed)
+        df_sample = df_news.groupby("label").sample(n=100, random_state=random_seed)
 
         directory = os.path.dirname(os.path.abspath(__file__))
         directory = directory + '/datasets/sample_dataset.csv'

@@ -204,6 +204,14 @@ if __name__ == '__main__':
                                 number_of_labels=NUMBER_OF_LABELS,
                                 train_df=df_train,
                                 eval_df=df_val)
-        trainer.run_trainer()
+        model = trainer.run_trainer()
+
+        # Make predictions with the model
+        predictions, raw_outputs = model.predict(["A 7-year-old boy named Eli saved his baby sister's life when "
+                                                  "he jumped into her room through a window to rescue her from "
+                                                  "a fire that destroyed his family's home."])
+
+        print("predictions: ", predictions)
+        print("decoded: ", encoder.inverse_transform(predictions))
 
     print('main close')
