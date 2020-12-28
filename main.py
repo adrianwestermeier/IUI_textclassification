@@ -58,7 +58,13 @@ if __name__ == '__main__':
     torch.manual_seed(RANDOM_SEED)
     #############################################
 
-    device = torch.device("cpu")
+    if torch.cuda.is_available():
+        dev = "cuda:0"
+    else:
+        dev = "cpu"
+
+    device = torch.device(dev)
+    print('device: ', device)
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
