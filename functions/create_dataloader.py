@@ -12,5 +12,5 @@ def create_data_loader(df, tokenizer, max_len, batch_size):
 
     return DataLoader(ds,
                       batch_size=batch_size,
-                      num_workers=1  # original 4
+                      num_workers=4  # original 4
                       )
