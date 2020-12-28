@@ -85,9 +85,9 @@ class SequenceTrainer:
                 #   [0]: input ids
                 #   [1]: attention masks
                 #   [2]: labels
-                b_input_ids = batch['input_ids'].to(self.device)
-                b_input_mask = batch['attention_mask'].to(self.device)
-                b_labels = batch['targets'].to(self.device)
+                b_input_ids = batch['input_ids']
+                b_input_mask = batch['attention_mask']
+                b_labels = batch['targets']
 
                 # Always clear any previously calculated gradients before performing a backward pass.
                 # (source: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch)
