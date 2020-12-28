@@ -11,9 +11,11 @@ from functions.utils import load_dataset
 from functions.create_trainer import create_trainer
 from classes.sequence_trainer import SequenceTrainer
 from classes.custom_trainer import NewsClassifier, CustomTrainer
+from classes.simple_trainer import SimpleTrainer
 
 from torch import nn, optim
-from transformers import AutoTokenizer, AutoModel, BertModel, BertTokenizer, AdamW, get_linear_schedule_with_warmup
+from transformers import AutoTokenizer, AutoModel, BertModel, BertTokenizer, DistilBertTokenizer, AdamW, \
+    get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix, classification_report
@@ -21,6 +23,7 @@ from matplotlib import rc
 from collections import defaultdict
 from pylab import rcParams
 # from textwrap import wrap
+from simpletransformers.classification import ClassificationModel, ClassificationArgs
 
 
 def test_model(data_sample, label_number):
@@ -46,6 +49,8 @@ def test_model(data_sample, label_number):
 
 
 if __name__ == '__main__':
+    mode = 'simple_transformers'
+    # mode = 'custom'
     #############################################
     # some settings
     pd.set_option('mode.chained_assignment', None)
@@ -66,94 +71,139 @@ if __name__ == '__main__':
     device = torch.device(dev)
     print('device: ', device)
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    if mode == 'custom':
+        tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
-    sample_txt = 'Vatican allows gay marriage in council.'
-    encoded_text = tokenizer.encode_plus(sample_txt,
-                                         max_length=32,
-                                         truncation=True,
-                                         add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
-                                         return_token_type_ids=False,
-                                         pad_to_max_length=True,
-                                         return_attention_mask=True,
-                                         return_tensors='pt',  # Return PyTorch tensors
-                                         )
+        # sample_txt = 'Vatican allows gay marriage in council.'
+        # encoded_text = tokenizer.encode_plus(sample_txt,
+        #                                      max_length=32,
+        #                                      truncation=True,
+        #                                      add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
+        #                                      return_token_type_ids=False,
+        #                                      pad_to_max_length=True,
+        #                                      return_attention_mask=True,
+        #                                      return_tensors='pt',  # Return PyTorch tensors
+        #                                      )
+        #
+        # print('encoded_text keys: ', encoded_text.keys())
+        # print('tokens of encoded text: ', tokenizer.convert_ids_to_tokens(encoded_text['input_ids'][0]))
 
-    print('encoded_text keys: ', encoded_text.keys())
-    print('tokens of encoded text: ', tokenizer.convert_ids_to_tokens(encoded_text['input_ids'][0]))
+        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED)
+        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED, path='sample_dataset.csv')
 
-    df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED)
-    # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED, path='sample_dataset.csv')
+        print('df sample value counts: ')
+        print(df_sample.label.value_counts())
+        print('prepared dataset: ')
+        print(df_sample.head())
 
-    print('df sample value counts: ')
-    print(df_sample.category.value_counts())
-    print('prepared dataset: ')
-    print(df_sample.head())
+        NUMBER_OF_LABELS = df_sample.label.nunique()
+        MAX_LEN = min(512, max_token_length)
+        BATCH_SIZE = 16
+        # Number of training epochs. The BERT authors recommend between 2 and 4.
+        # We chose to run for 4, but we'll see later that this may be over-fitting the training data.
+        EPOCHS = 1
 
-    NUMBER_OF_LABELS = df_sample.category.nunique()
-    MAX_LEN = min(512, max_token_length)
+        print('number of labels: ', NUMBER_OF_LABELS)
+        print('max token length: ', MAX_LEN)
+        print('batch size: ', BATCH_SIZE)
+        print('epochs: ', EPOCHS)
 
-    # label encoded_text the categories. After this each category would be mapped to an integer.
-    encoder = LabelEncoder()
-    df_sample['category_encoded'] = encoder.fit_transform(df_sample['category'])
-    print('encoded categories: ', df_sample.category_encoded.unique())
-    print('decoded 0 ', encoder.inverse_transform([0]))
-    print('decoded 1 ', encoder.inverse_transform([1]))
-    print('decoded 2 ', encoder.inverse_transform([2]))
-    print('decoded 3 ', encoder.inverse_transform([3]))
-    print('decoded 4 ', encoder.inverse_transform([4]))
-    print('encoded BUSINESS: ', encoder.transform(['BUSINESS']))
-    print('encoded ENTERTAINMENT: ', encoder.transform(['ENTERTAINMENT']))
-    print('encoded HEALTH: ', encoder.transform(['HEALTH']))
-    print('encoded SCIENCE: ', encoder.transform(['SCIENCE']))
-    print('encoded POLITICS: ', encoder.transform(['POLITICS']))
+        # label encoded_text the categories. After this each category would be mapped to an integer.
+        encoder = LabelEncoder()
+        df_sample['category_encoded'] = encoder.fit_transform(df_sample['label'])
+        print('encoded categories: ', df_sample.category_encoded.unique())
+        print('decoded 0 ', encoder.inverse_transform([0]))
+        print('decoded 1 ', encoder.inverse_transform([1]))
+        print('decoded 2 ', encoder.inverse_transform([2]))
+        print('decoded 3 ', encoder.inverse_transform([3]))
+        print('decoded 4 ', encoder.inverse_transform([4]))
+        print('encoded BUSINESS: ', encoder.transform(['BUSINESS']))
+        print('encoded ENTERTAINMENT: ', encoder.transform(['ENTERTAINMENT']))
+        print('encoded HEALTH: ', encoder.transform(['HEALTH']))
+        print('encoded SCIENCE: ', encoder.transform(['SCIENCE']))
+        print('encoded POLITICS: ', encoder.transform(['POLITICS']))
 
-    df_train, df_test = train_test_split(df_sample, test_size=0.3, random_state=RANDOM_SEED)
-    df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
+        df_train, df_test = train_test_split(df_sample, test_size=0.3, random_state=RANDOM_SEED)
+        df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
 
-    print('train set shape: ', df_train.shape)
-    print('val set shape: ', df_val.shape)
-    print('test set shape: ', df_test.shape)
+        print('train set shape: ', df_train.shape)
+        print('val set shape: ', df_val.shape)
+        print('test set shape: ', df_test.shape)
 
-    BATCH_SIZE = 16
+        # define data-loaders to sample batches for training and validation
+        train_data_loader = create_data_loader(df_train, tokenizer, MAX_LEN, BATCH_SIZE)
+        val_data_loader = create_data_loader(df_val, tokenizer, MAX_LEN, BATCH_SIZE)
+        test_data_loader = create_data_loader(df_test, tokenizer, MAX_LEN, BATCH_SIZE)
 
-    # define data-loaders to sample batches for training and validation
-    train_data_loader = create_data_loader(df_train, tokenizer, MAX_LEN, BATCH_SIZE)
-    val_data_loader = create_data_loader(df_val, tokenizer, MAX_LEN, BATCH_SIZE)
-    test_data_loader = create_data_loader(df_test, tokenizer, MAX_LEN, BATCH_SIZE)
+        # to play around with data
+        # data = train_data_loader.dataset.__getitem__(1)
+        # data = next(iter(train_data_loader))
+        # test_model(data)
 
-    # to play around with data
-    # data = train_data_loader.dataset.__getitem__(1)
-    # data = next(iter(train_data_loader))
-    # test_model(data)
+        loss_fn = nn.CrossEntropyLoss().to(device)
+        # trainer = create_trainer('custom',
+        #                          EPOCHS,
+        #                          train_data_loader,
+        #                          val_data_loader,
+        #                          device,
+        #                          loss_fn,
+        #                          len(df_train),
+        #                          NUMBER_OF_LABELS)
 
-    # Number of training epochs. The BERT authors recommend between 2 and 4.
-    # We chose to run for 4, but we'll see later that this may be over-fitting the training data.
-    EPOCHS = 1
+        trainer = create_trainer('sequence',
+                                 EPOCHS,
+                                 train_data_loader,
+                                 val_data_loader,
+                                 device,
+                                 0,
+                                 0,
+                                 NUMBER_OF_LABELS)
+        trainer.train()
 
-    print('number of labels: ', NUMBER_OF_LABELS)
-    print('max token length: ', MAX_LEN)
-    print('batch size: ', BATCH_SIZE)
-    print('epochs: ', EPOCHS)
+    else:
+        tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
-    loss_fn = nn.CrossEntropyLoss().to(device)
-    # trainer = create_trainer('custom',
-    #                          EPOCHS,
-    #                          train_data_loader,
-    #                          val_data_loader,
-    #                          device,
-    #                          loss_fn,
-    #                          len(df_train),
-    #                          NUMBER_OF_LABELS)
+        # load data
+        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED)
+        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED, path='sample_dataset.csv')
+        print('df sample value counts: ')
+        print(df_sample.label.value_counts())
+        print('prepared dataset: ')
+        print(df_sample.head())
 
-    trainer = create_trainer('sequence',
-                             EPOCHS,
-                             train_data_loader,
-                             val_data_loader,
-                             device,
-                             0,
-                             0,
-                             NUMBER_OF_LABELS)
-    trainer.train()
+        # hyperparams
+        NUMBER_OF_LABELS = df_sample.label.nunique()
+        MAX_LEN = min(512, max_token_length)
+        BATCH_SIZE = 16
+        EPOCHS = 1
+
+        # label encoded_text the categories. After this each category would be mapped to an integer.
+        encoder = LabelEncoder()
+        df_sample['category_encoded'] = encoder.fit_transform(df_sample['label'])
+        print('encoded categories: ', df_sample.category_encoded.unique())
+        print('decoded 0 ', encoder.inverse_transform([0]))
+        print('decoded 1 ', encoder.inverse_transform([1]))
+        print('decoded 2 ', encoder.inverse_transform([2]))
+        print('decoded 3 ', encoder.inverse_transform([3]))
+        print('decoded 4 ', encoder.inverse_transform([4]))
+        print('encoded BUSINESS: ', encoder.transform(['BUSINESS']))
+        print('encoded ENTERTAINMENT: ', encoder.transform(['ENTERTAINMENT']))
+        print('encoded HEALTH: ', encoder.transform(['HEALTH']))
+        print('encoded SCIENCE: ', encoder.transform(['SCIENCE']))
+        print('encoded POLITICS: ', encoder.transform(['POLITICS']))
+
+        # take encoded labels as labels
+        df_sample.drop(['label'], axis=1, inplace=True)
+        df_sample.rename(columns={"category_encoded": "labels"}, inplace=True)
+
+        df_train, df_test = train_test_split(df_sample, test_size=0.3, random_state=RANDOM_SEED)
+        df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
+
+        trainer = SimpleTrainer(epochs=EPOCHS,
+                                device=device,
+                                number_of_labels=NUMBER_OF_LABELS,
+                                train_df=df_train,
+                                eval_df=df_val)
+        trainer.run_trainer()
 
     print('main close')

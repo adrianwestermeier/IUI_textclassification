@@ -53,8 +53,8 @@ def calculate_max_token_length(df, tokenizer):
 
 def investigate_dataset(df, tokenizer):
     print('columns: ', df.columns.tolist())
-    print('number of categories: ', df.category.nunique())
-    print('categories: ', df.category.unique())
+    print('number of categories: ', df.label.nunique())
+    print('categories: ', df.label.unique())
     # print('df value counts: ')
     # print(df.category.value_counts())
     # plot_number_of_occurrences(df)
@@ -70,7 +70,6 @@ def investigate_dataset(df, tokenizer):
 def prepare_dataset(name, tokenizer, category_list=None):
     if name == 'News_Category_Dataset_v2.json':
         df = load_dataset_json(name)
-        max_token_length = investigate_dataset(df, tokenizer)
         df.category = df.category.map(lambda x: "WORLDPOST" if x == "THE WORLDPOST" else x)
         df_truncated = df[['category', 'headline', 'short_description']]
         df_truncated['headline'] = df_truncated['headline'].apply(lambda headline: str(headline).lower())
@@ -78,14 +77,18 @@ def prepare_dataset(name, tokenizer, category_list=None):
         df_truncated['short_description'] = df_truncated['headline'] + df_truncated['short_description']
         if category_list:
             df_truncated = df_truncated[df_truncated['category'].isin(category_list)]
-        return df_truncated[['category', 'short_description']], max_token_length
+        df_truncated.rename(columns={"category": "label", "short_description": "text"}, inplace=True)
+        df_truncated = df_truncated[['text', 'label']]
+        max_token_length = investigate_dataset(df_truncated, tokenizer)
+        return df_truncated[['text', 'label']], max_token_length
     else:
         df = load_dataset_csv(name)
         di = {'b': 'BUSINESS', 't': 'SCIENCE', 'e': 'ENTERTAINMENT', 'm': 'HEALTH'}
         df['CATEGORY'].replace(di, inplace=True)
-        df.rename(columns={"CATEGORY": "category", "TITLE": "short_description"}, inplace=True)
+        df.rename(columns={"CATEGORY": "label", "TITLE": "text"}, inplace=True)
+        df = df[['text', 'label']]
         max_token_length = investigate_dataset(df, tokenizer)
-        return df[['category', 'short_description']], max_token_length
+        return df[['text', 'label']], max_token_length
 
 
 def load_dataset(tokenizer, random_seed, path=None):
@@ -104,17 +107,17 @@ def load_dataset(tokenizer, random_seed, path=None):
                                                                           tokenizer=tokenizer)
 
         print('df category value counts: ')
-        print(df_news_category.category.value_counts())
+        print(df_news_category.label.value_counts())
         print('df aggregator value counts: ')
-        print(df_news_aggregator.category.value_counts())
+        print(df_news_aggregator.label.value_counts())
 
         # append dicts and sample uniformly
         df_news = df_news_aggregator.append(df_news_category, ignore_index=True)
 
         print('df value counts: ')
-        print(df_news.category.value_counts())
+        print(df_news.label.value_counts())
 
-        df_sample = df_news.groupby("category").sample(n=30000, random_state=random_seed)
+        df_sample = df_news.groupby("label").sample(n=5000, random_state=random_seed)
 
         directory = os.path.dirname(os.path.abspath(__file__))
         directory = directory + '/datasets/sample_dataset.csv'
