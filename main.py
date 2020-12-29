@@ -161,6 +161,19 @@ if __name__ == '__main__':
         trainer.train()
 
     else:
+        test_set = [
+            ["A 7-year-old boy named Eli saved his baby sister's life when "
+             "he jumped into her room through a window to rescue her from "
+             "a fire that destroyed his family's home."],
+            [" Muslim and Jewish paramedics pause to pray together.One of many inspiring moments "
+             "in the coronavirus crisis "],
+            ["Adidas developing plant-based leather material that will be used to make shoes...material made "
+             "from mycelium, which is part of fungus. Company produced 15 million pairs of shoes "
+             "in 2020 made from recycled plastic waste collected from beaches and coastal regions."],
+            ["A new cancer therapy simultaneously zaps tumors with imaging-guided laser radiation and stimulates "
+             "the anti-cancer immune response. This technology, developed by South Korean scientists, combines "
+             "photodynamic therapy with immunotherapy for the treatment of cancer and is the first of its kind."]
+        ]
         tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
         # load data
@@ -201,17 +214,17 @@ if __name__ == '__main__':
 
         trainer = SimpleTrainer(epochs=EPOCHS,
                                 device=device,
+                                batch_size=BATCH_SIZE,
                                 number_of_labels=NUMBER_OF_LABELS,
+                                max_seq_length=MAX_LEN,
                                 train_df=df_train,
                                 eval_df=df_val)
         model = trainer.run_trainer()
 
-        # Make predictions with the model
-        predictions, raw_outputs = model.predict(["A 7-year-old boy named Eli saved his baby sister's life when "
-                                                  "he jumped into her room through a window to rescue her from "
-                                                  "a fire that destroyed his family's home."])
-
-        print("predictions: ", predictions)
-        print("decoded: ", encoder.inverse_transform(predictions))
+        for el in test_set:
+            # Make predictions with the model
+            predictions, raw_outputs = model.predict(el)
+            print("predictions: ", predictions)
+            print("decoded: ", encoder.inverse_transform(predictions))
 
     print('main close')
