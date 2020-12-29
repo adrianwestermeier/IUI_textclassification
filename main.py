@@ -1,3 +1,4 @@
+import argparse
 import os
 import torch  # If there's a GPU available...
 import transformers
@@ -27,6 +28,15 @@ from pylab import rcParams
 # from textwrap import wrap
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
 from torch.utils.tensorboard import SummaryWriter
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--out_root", help="Please specify the out root dir", type=str)
+parser.add_argument("--use_cuda", help="Please specify if cuda should be used", default=0, type=int)
+
+args = parser.parse_args()
+OUT_ROOT = args.out_root
+USE_CUDA = bool(args.use_cuda)
 
 
 def test_model(data_sample, label_number):
@@ -189,7 +199,8 @@ if __name__ == '__main__':
 
         # hyperparams
         MODEL_NAME = 'distilbert'
-        OUT_ROOT = os.path.dirname(os.path.abspath(__file__)) + '/eval'
+        if not OUT_ROOT:
+            OUT_ROOT = os.path.dirname(os.path.abspath(__file__)) + '/eval'
         NUMBER_OF_LABELS = df_sample.label.nunique()
         MAX_LEN = min(512, max_token_length)
         BATCH_SIZE = 16
@@ -227,7 +238,8 @@ if __name__ == '__main__':
                                 max_seq_length=MAX_LEN,
                                 train_df=df_train,
                                 eval_df=df_val,
-                                output_dir='{}/{}'.format(OUT_ROOT, model_out_name)
+                                output_dir='{}/{}'.format(OUT_ROOT, model_out_name),
+                                use_cuda=USE_CUDA
                                 )
         model = trainer.run_trainer()
 

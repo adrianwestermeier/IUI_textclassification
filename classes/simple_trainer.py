@@ -15,7 +15,8 @@ class SimpleTrainer:
                  max_seq_length,
                  train_df,
                  eval_df,
-                 output_dir):
+                 output_dir,
+                 use_cuda):
         self.model_name = model_name
         self.epochs = epochs
         self.batch_size = batch_size
@@ -25,6 +26,7 @@ class SimpleTrainer:
         self.train_df = train_df
         self.eval_df = eval_df
         self.output_dir = output_dir
+        self.use_cuda = use_cuda
 
     def run_trainer(self):
         logging.basicConfig(level=logging.INFO)
@@ -77,7 +79,7 @@ class SimpleTrainer:
             self.model_name + "-base-uncased",
             num_labels=self.num_labels,
             args=model_args,
-            use_cuda=(not (self.device.type == 'cpu'))
+            use_cuda=self.use_cuda
         )
 
         # Train the model
