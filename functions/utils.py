@@ -107,7 +107,7 @@ def prepare_dataset(name, tokenizer, category_list=None):
         return df[['text', 'label']], max_token_length
 
 
-def load_dataset(tokenizer, random_seed, path=None):
+def load_dataset(tokenizer, number_samples, random_seed, path=None):
     if path:
         print("loading existing sample dataset")
         df_sample = load_dataset_csv(path)
@@ -144,7 +144,7 @@ def load_dataset(tokenizer, random_seed, path=None):
         print('df value counts: ')
         print(df_news.label.value_counts())
 
-        df_sample = df_news.groupby("label").sample(n=100, random_state=random_seed)
+        df_sample = df_news.groupby("label").sample(n=number_samples, random_state=random_seed)
 
         directory = os.path.dirname(os.path.abspath(__file__))
         directory = directory + '/datasets/sample_dataset.csv'

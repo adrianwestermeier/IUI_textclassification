@@ -1,3 +1,4 @@
+import os
 import torch  # If there's a GPU available...
 import transformers
 from transformers import BertForSequenceClassification, AdamW, BertConfig
@@ -13,6 +14,7 @@ from classes.sequence_trainer import SequenceTrainer
 from classes.custom_trainer import NewsClassifier, CustomTrainer
 from classes.simple_trainer import SimpleTrainer
 
+from datetime import datetime
 from torch import nn, optim
 from transformers import AutoTokenizer, AutoModel, BertModel, BertTokenizer, DistilBertTokenizer, AdamW, \
     get_linear_schedule_with_warmup
@@ -24,6 +26,7 @@ from collections import defaultdict
 from pylab import rcParams
 # from textwrap import wrap
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
+from torch.utils.tensorboard import SummaryWriter
 
 
 def test_model(data_sample, label_number):
@@ -88,8 +91,8 @@ if __name__ == '__main__':
         # print('encoded_text keys: ', encoded_text.keys())
         # print('tokens of encoded text: ', tokenizer.convert_ids_to_tokens(encoded_text['input_ids'][0]))
 
-        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED)
-        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED, path='sample_dataset.csv')
+        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED)
+        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED, path='sample_dataset.csv')
 
         print('df sample value counts: ')
         print(df_sample.label.value_counts())
@@ -177,14 +180,16 @@ if __name__ == '__main__':
         tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
         # load data
-        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED)
-        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, random_seed=RANDOM_SEED, path='sample_dataset.csv')
+        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED)
+        # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED, path='sample_dataset.csv')
         print('df sample value counts: ')
         print(df_sample.label.value_counts())
         print('prepared dataset: ')
         print(df_sample.head())
 
         # hyperparams
+        MODEL_NAME = 'distilbert'
+        OUT_ROOT = os.path.dirname(os.path.abspath(__file__)) + '/eval'
         NUMBER_OF_LABELS = df_sample.label.nunique()
         MAX_LEN = min(512, max_token_length)
         BATCH_SIZE = 16
@@ -212,13 +217,18 @@ if __name__ == '__main__':
         df_train, df_test = train_test_split(df_sample, test_size=0.3, random_state=RANDOM_SEED)
         df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
 
-        trainer = SimpleTrainer(epochs=EPOCHS,
+        model_out_name = 'model_{}_{}'.format(MODEL_NAME, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
+
+        trainer = SimpleTrainer(model_name=MODEL_NAME,
+                                epochs=EPOCHS,
                                 device=device,
                                 batch_size=BATCH_SIZE,
                                 number_of_labels=NUMBER_OF_LABELS,
                                 max_seq_length=MAX_LEN,
                                 train_df=df_train,
-                                eval_df=df_val)
+                                eval_df=df_val,
+                                output_dir='{}/{}'.format(OUT_ROOT, model_out_name)
+                                )
         model = trainer.run_trainer()
 
         for el in test_set:
@@ -226,5 +236,11 @@ if __name__ == '__main__':
             predictions, raw_outputs = model.predict(el)
             print("predictions: ", predictions)
             print("decoded: ", encoder.inverse_transform(predictions))
+
+        # writer = SummaryWriter("my_experiment")
+        # x = range(100)
+        # for i in x:
+        #     writer.add_scalar('y=2x', i * 2, i)
+        # writer.close()
 
     print('main close')
