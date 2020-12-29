@@ -243,6 +243,10 @@ if __name__ == '__main__':
                                 )
         model = trainer.run_trainer()
 
+        # model = ClassificationModel(
+        #     "distilbert", "./eval/model_distilbert_20201229165824/checkpoint-4-epoch-1", use_cuda=False
+        # )
+
         for el in test_set:
             # Make predictions with the model
             predictions, raw_outputs = model.predict(el)
