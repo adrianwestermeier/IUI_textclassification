@@ -57,6 +57,8 @@ class SimpleTrainer:
         #     "distilbert", "distilbert-base-uncased", args=model_args, use_cuda=(self.device == 'cuda')
         # )
 
+        print('output dir: ' + self.output_dir)
+
         model_args = {'max_seq_length': self.max_seq_length,
                       'learning_rate': 4e-5,
                       'num_train_epochs': self.epochs,
@@ -85,7 +87,7 @@ class SimpleTrainer:
         # Train the model
         # model.train_model(self.train_df)
         # model.train_model(self.train_df, output_dir=output_dir, eval_df=test_x, acc=accuracy_score)
-        model.train_model(self.train_df, eval_df=self.eval_df, acc=accuracy_score)
+        model.train_model(self.train_df, output_dir=self.output_dir, eval_df=self.eval_df, acc=accuracy_score)
 
         # Evaluate the model
         # eval_df, multi_label=False, output_dir=None, verbose=True, silent=False, wandb_log=True, **kwargs
