@@ -33,10 +33,12 @@ from torch.utils.tensorboard import SummaryWriter
 parser = argparse.ArgumentParser()
 parser.add_argument("--out_root", help="Please specify the out root dir", type=str)
 parser.add_argument("--use_cuda", help="Please specify if cuda should be used", default=0, type=int)
+parser.add_argument("--number_of_samples", help="how much samples should be drawn from data", default=1000, type=int)
 
 args = parser.parse_args()
 OUT_ROOT = args.out_root
 USE_CUDA = bool(args.use_cuda)
+NUMBER_OF_SAMPLES = args.number_of_samples
 
 
 def test_model(data_sample, label_number):
@@ -187,10 +189,13 @@ if __name__ == '__main__':
              "the anti-cancer immune response. This technology, developed by South Korean scientists, combines "
              "photodynamic therapy with immunotherapy for the treatment of cancer and is the first of its kind."]
         ]
+
         tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
         # load data
-        df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED)
+        df_sample, max_token_length = load_dataset(tokenizer=tokenizer,
+                                                   number_samples=NUMBER_OF_SAMPLES,
+                                                   random_seed=RANDOM_SEED)
         # df_sample, max_token_length = load_dataset(tokenizer=tokenizer, number_samples=10, random_seed=RANDOM_SEED, path='sample_dataset.csv')
         print('df sample value counts: ')
         print(df_sample.label.value_counts())
