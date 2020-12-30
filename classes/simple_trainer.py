@@ -74,7 +74,10 @@ class SimpleTrainer:
                       'patience': 5,
                       'save_only_best': True,
                       'overwrite_last_saved': True,
-                      'save_steps': 0}
+                      'save_steps': 0,
+                      'wandb_project': 'gallery',
+                      "wandb_kwargs": {'entity': 'wandb'}
+                      }
         # Create a ClassificationModel
         model = ClassificationModel(
             self.model_name,

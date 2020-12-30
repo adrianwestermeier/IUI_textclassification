@@ -34,11 +34,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--out_root", help="Please specify the out root dir", type=str)
 parser.add_argument("--use_cuda", help="Please specify if cuda should be used", default=0, type=int)
 parser.add_argument("--number_of_samples", help="how much samples should be drawn from data", default=1000, type=int)
+parser.add_argument("--number_of_epochs", help="how much epochs", default=1, type=int)
 
 args = parser.parse_args()
 OUT_ROOT = args.out_root
 USE_CUDA = bool(args.use_cuda)
 NUMBER_OF_SAMPLES = args.number_of_samples
+EPOCHS = args.number_of_epochs
 
 
 def test_model(data_sample, label_number):
@@ -209,7 +211,6 @@ if __name__ == '__main__':
         NUMBER_OF_LABELS = df_sample.label.nunique()
         MAX_LEN = min(512, max_token_length)
         BATCH_SIZE = 16
-        EPOCHS = 1
 
         # label encoded_text the categories. After this each category would be mapped to an integer.
         encoder = LabelEncoder()
@@ -255,6 +256,7 @@ if __name__ == '__main__':
         for el in test_set:
             # Make predictions with the model
             predictions, raw_outputs = model.predict(el)
+            print("sample: ", el)
             print("predictions: ", predictions)
             print("decoded: ", encoder.inverse_transform(predictions))
 
