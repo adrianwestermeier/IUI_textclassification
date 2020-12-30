@@ -233,7 +233,7 @@ if __name__ == '__main__':
         df_train, df_test = train_test_split(df_sample, test_size=0.3, random_state=RANDOM_SEED)
         df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
 
-        model_out_name = 'model_{}_{}'.format(MODEL_NAME, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
+        model_out_name = 'IUI_model_{}_{}'.format(MODEL_NAME, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
 
         trainer = SimpleTrainer(model_name=MODEL_NAME,
                                 epochs=EPOCHS,
