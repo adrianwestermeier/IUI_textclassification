@@ -66,17 +66,18 @@ class SimpleTrainer:
                       'overwrite_output_dir': True,
                       'evaluate_during_training': True,
                       'evaluate_during_training_steps': 200,
+                      'best_model_dir': '{}/best-models'.format(self.output_dir),
                       'logging_steps': 50,
                       'do_lower_case': True,
                       'train_batch_size': self.batch_size,
                       'use_batch_norm': False,
                       'tensorboard_dir': '{}/runs'.format(self.output_dir),
-                      'patience': 5,
+                      'early_stopping_patience': 3,
                       'save_only_best': True,
                       'overwrite_last_saved': True,
                       'save_steps': 0,
                       'wandb_project': 'gallery',
-                      
+
                       }
         # Create a ClassificationModel
         model = ClassificationModel(

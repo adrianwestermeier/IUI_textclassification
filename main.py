@@ -189,7 +189,9 @@ if __name__ == '__main__':
              "in 2020 made from recycled plastic waste collected from beaches and coastal regions."],
             ["A new cancer therapy simultaneously zaps tumors with imaging-guided laser radiation and stimulates "
              "the anti-cancer immune response. This technology, developed by South Korean scientists, combines "
-             "photodynamic therapy with immunotherapy for the treatment of cancer and is the first of its kind."]
+             "photodynamic therapy with immunotherapy for the treatment of cancer and is the first of its kind."],
+            ["Japan developing wooden satellites to cut space junk"],
+            ["Two Korean-American women elected to congress for the first time ever."]
         ]
 
         tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
@@ -210,7 +212,7 @@ if __name__ == '__main__':
             OUT_ROOT = os.path.dirname(os.path.abspath(__file__)) + '/eval'
         NUMBER_OF_LABELS = df_sample.label.nunique()
         MAX_LEN = min(512, max_token_length)
-        BATCH_SIZE = 16
+        BATCH_SIZE = 8
 
         # label encoded_text the categories. After this each category would be mapped to an integer.
         encoder = LabelEncoder()
@@ -250,7 +252,7 @@ if __name__ == '__main__':
         model = trainer.run_trainer()
 
         # model = ClassificationModel(
-        #     "distilbert", "./eval/model_distilbert_20201229165824/checkpoint-4-epoch-1", use_cuda=False
+        #     "distilbert", "/home/adrian/Documents/Uni/master/WiSe-2020/IUI/projekt/IUI_models/2020_12_30_1200/checkpoint-2364-epoch-3-20201230T112305Z-001//checkpoint-2364-epoch-3", use_cuda=False
         # )
 
         for el in test_set:
