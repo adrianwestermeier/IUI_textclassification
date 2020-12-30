@@ -76,7 +76,7 @@ class SimpleTrainer:
                       'overwrite_last_saved': True,
                       'save_steps': 0,
                       'wandb_project': 'gallery',
-                      "wandb_kwargs": {'entity': 'teamname'}
+                      
                       }
         # Create a ClassificationModel
         model = ClassificationModel(
