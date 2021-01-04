@@ -35,12 +35,14 @@ parser.add_argument("--out_root", help="Please specify the out root dir", type=s
 parser.add_argument("--use_cuda", help="Please specify if cuda should be used", default=0, type=int)
 parser.add_argument("--number_of_samples", help="how much samples should be drawn from data", default=1000, type=int)
 parser.add_argument("--number_of_epochs", help="how much epochs", default=1, type=int)
+parser.add_argument("--batch_size", help="bacht size", default=16, type=int)
 
 args = parser.parse_args()
 OUT_ROOT = args.out_root
 USE_CUDA = bool(args.use_cuda)
 NUMBER_OF_SAMPLES = args.number_of_samples
 EPOCHS = args.number_of_epochs
+BATCH_SIZE = args.batch_size
 
 
 def test_model(data_sample, label_number):
@@ -212,7 +214,6 @@ if __name__ == '__main__':
             OUT_ROOT = os.path.dirname(os.path.abspath(__file__)) + '/eval'
         NUMBER_OF_LABELS = df_sample.label.nunique()
         MAX_LEN = min(512, max_token_length)
-        BATCH_SIZE = 8
 
         # label encoded_text the categories. After this each category would be mapped to an integer.
         encoder = LabelEncoder()
@@ -252,7 +253,7 @@ if __name__ == '__main__':
         model = trainer.run_trainer()
 
         # model = ClassificationModel(
-        #     "distilbert", "/home/adrian/Documents/Uni/master/WiSe-2020/IUI/projekt/IUI_models/2020_12_30_1200/checkpoint-2364-epoch-3-20201230T112305Z-001//checkpoint-2364-epoch-3", use_cuda=False
+        #     "distilbert", "/home/adrian/Documents/Uni/master/WiSe-2020/IUI/projekt/IUI_models/2020_12_30_1300/best-models/best-models", use_cuda=False
         # )
 
         for el in test_set:

@@ -65,7 +65,7 @@ class SimpleTrainer:
                       'reprocess_input_data': True,
                       'overwrite_output_dir': True,
                       'evaluate_during_training': True,
-                      'evaluate_during_training_steps': 200,
+                      'evaluate_during_training_steps': 400,
                       'best_model_dir': '{}/best-models'.format(self.output_dir),
                       'logging_steps': 50,
                       'do_lower_case': True,
