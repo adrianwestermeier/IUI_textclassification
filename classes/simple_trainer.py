@@ -41,14 +41,14 @@ class SimpleTrainer:
                       'reprocess_input_data': True,
                       'overwrite_output_dir': True,
                       'evaluate_during_training': True,
-                      'evaluate_during_training_steps': 400,
+                      'evaluate_during_training_steps': 800,  # 400
                       'best_model_dir': '{}/best-models'.format(self.output_dir),
-                      'logging_steps': 50,
+                      'logging_steps': 100,  # 50
                       'do_lower_case': True,
                       'train_batch_size': self.batch_size,
                       'use_batch_norm': False,
                       'tensorboard_dir': '{}/runs'.format(self.output_dir),
-                      'early_stopping_patience': 3,
+                      'early_stopping_patience': 1,
                       'save_only_best': True,
                       'overwrite_last_saved': True,
                       'save_steps': 0,
