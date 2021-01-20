@@ -30,11 +30,14 @@ def plot_token_distribution(token_lengths):
     plt.show()
 
 
-def plot_number_of_occurrences(df, column_name):
+def plot_number_of_occurrences(df, column_name, df_name):
     sns.countplot(df[column_name])
     plt.xlabel(column_name)
     plt.xticks(rotation=70)
-    plt.show()
+    # plt.show()
+    plt.tight_layout()
+    plt.savefig(df_name + '.png')
+    plt.close()
 
 
 def calculate_max_token_length(df, tokenizer):
@@ -51,13 +54,14 @@ def calculate_max_token_length(df, tokenizer):
     return max(token_lens)
 
 
-def investigate_dataset(df, column_name, tokenizer):
+def investigate_dataset(df, column_name, df_name, tokenizer=None):
+    print('df name: ', df_name)
     print('columns: ', df.columns.tolist())
     print('number of categories: ', df[column_name].nunique())
     print('categories: ', df[column_name].unique())
     print('df value counts: ')
     print(df[column_name].value_counts())
-    # plot_number_of_occurrences(df, column_name)
+    # plot_number_of_occurrences(df, column_name, df_name)
 
     # to determine the proper max_len let uncomment the line below, it's 512 and 352
     # max_token_length = calculate_max_token_length(df, tokenizer)
@@ -82,7 +86,7 @@ def prepare_dataset(name, tokenizer, category_list=None):
         df = load_dataset_json(name)
         df.category = df.category.map(lambda x: "WORLDPOST" if x == "THE WORLDPOST" else x)
         df_truncated = df[['category', 'headline', 'short_description']]
-        # max_token_length = investigate_dataset(df_truncated, 'category', tokenizer)
+        # max_token_length = investigate_dataset(df_truncated, 'category', 'news_category', tokenizer)
         df_truncated['headline'] = df_truncated['headline'].apply(lambda headline: str(headline).lower())
         df_truncated['short_description'] = df_truncated['short_description'].apply(lambda descr: str(descr).lower())
         df_truncated['short_description'] = df_truncated['headline'] + df_truncated['short_description']
@@ -94,7 +98,7 @@ def prepare_dataset(name, tokenizer, category_list=None):
             df_truncated = df_truncated[df_truncated['category'].isin(category_list)]
         df_truncated.rename(columns={"category": "label", "short_description": "text"}, inplace=True)
         df_truncated = df_truncated[['text', 'label']]
-        max_token_length = investigate_dataset(df_truncated, 'label', tokenizer)
+        max_token_length = investigate_dataset(df_truncated, 'label', 'news_category', tokenizer)
         return df_truncated[['text', 'label']], max_token_length
     else:
         df = load_dataset_csv(name)
@@ -103,7 +107,7 @@ def prepare_dataset(name, tokenizer, category_list=None):
         df.rename(columns={"CATEGORY": "label", "TITLE": "text"}, inplace=True)
         df = df[['text', 'label']]
         df['text'] = df['text'].apply(lambda text: str(text).lower())
-        max_token_length = investigate_dataset(df, 'label', tokenizer)
+        max_token_length = investigate_dataset(df, 'label', 'aggregator', tokenizer)
         return df[['text', 'label']], max_token_length
 
 
@@ -115,17 +119,26 @@ def load_dataset(tokenizer, number_samples, random_seed, path=None):
         print(df_sample.category.value_counts())
         return df_sample, 512
     else:
+        # category_list = ['BUSINESS',
+        #                  'SCIENCE',
+        #                  'ENTERTAINMENT',
+        #                  'HEALTH',
+        #                  'POLITICS',
+        #                  'SPORTS',
+        #                  'RELIGION',
+        #                  'WORLD NEWS',
+        #                  'TECH',  # gets mapped to science
+        #                  'WELLNESS',  # gets mapped to health
+        #                  'OTHER']
         category_list = ['BUSINESS',
                          'SCIENCE',
                          'ENTERTAINMENT',
                          'HEALTH',
                          'POLITICS',
-                         'SPORTS',
-                         'RELIGION',
-                         'WORLD NEWS',
                          'TECH',  # gets mapped to science
                          'WELLNESS',  # gets mapped to health
                          'OTHER']
+
         df_news_category, max_token_length_category = prepare_dataset(name='News_Category_Dataset_v2.json',
                                                                       tokenizer=tokenizer,
                                                                       category_list=category_list)
@@ -140,15 +153,16 @@ def load_dataset(tokenizer, number_samples, random_seed, path=None):
 
         # append dicts and sample uniformly
         df_news = df_news_aggregator.append(df_news_category, ignore_index=True)
+        investigate_dataset(df_news, 'label', 'all_categories')
 
         print('df value counts: ')
         print(df_news.label.value_counts())
 
         df_sample = df_news.groupby("label").sample(n=number_samples, random_state=random_seed)
 
-        directory = os.path.dirname(os.path.abspath(__file__))
-        directory = directory + '/datasets/sample_dataset.csv'
-        df_sample.to_csv(directory, index=False)
+        # directory = os.path.dirname(os.path.abspath(__file__))
+        # directory = directory + '/datasets/sample_dataset_subset_categories.csv'
+        # df_sample.to_csv(directory, index=False)
 
         max_token_length = max(max_token_length_aggregator, max_token_length_category)
         return df_sample, max_token_length

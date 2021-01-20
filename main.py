@@ -9,11 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.create_dataloader import create_data_loader
-from functions.utils import load_dataset
+from functions.utils import load_dataset, load_dataset_csv, plot_number_of_occurrences
 from functions.create_trainer import create_trainer
 from classes.sequence_trainer import SequenceTrainer
 from classes.custom_trainer import NewsClassifier, CustomTrainer
 from classes.simple_trainer import SimpleTrainer
+from classes.bayesian_trainer import BayesianTrainer
 
 from datetime import datetime
 from torch import nn, optim
@@ -28,6 +29,7 @@ from pylab import rcParams
 # from textwrap import wrap
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
 from torch.utils.tensorboard import SummaryWriter
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 
 parser = argparse.ArgumentParser()
@@ -70,6 +72,7 @@ def test_model(data_sample, label_number):
 if __name__ == '__main__':
     mode = 'simple_transformers'
     # mode = 'custom'
+    #mode = 'bayse'
     #############################################
     # some settings
     pd.set_option('mode.chained_assignment', None)
@@ -179,7 +182,12 @@ if __name__ == '__main__':
                                  NUMBER_OF_LABELS)
         trainer.train()
 
+    elif mode == 'bayse':
+        train_set = load_dataset_csv('sample_dataset.csv')
+        trainer = BayesianTrainer(train_set=train_set)
+        trainer.run_trainer()
     else:
+
         test_set = [
             ["A 7-year-old boy named Eli saved his baby sister's life when "
              "he jumped into her room through a window to rescue her from "
@@ -207,6 +215,8 @@ if __name__ == '__main__':
         print(df_sample.label.value_counts())
         print('prepared dataset: ')
         print(df_sample.head())
+
+        # plot_number_of_occurrences(df_sample, 'label', 'sampled_subset_categories')
 
         # hyperparams
         MODEL_NAME = 'distilbert'
@@ -253,7 +263,7 @@ if __name__ == '__main__':
         model = trainer.run_trainer()
 
         # model = ClassificationModel(
-        #     "distilbert", "/home/adrian/Documents/Uni/master/WiSe-2020/IUI/projekt/IUI_models/2020_12_30_1300/best-models/best-models", use_cuda=False
+        #     "distilbert", "/home/adrian/Documents/Uni/master/WiSe-2020/IUI/projekt/IUI_models/2021_01_05_1500/best-models/best-models", use_cuda=False
         # )
 
         for el in test_set:
@@ -262,11 +272,5 @@ if __name__ == '__main__':
             print("sample: ", el)
             print("predictions: ", predictions)
             print("decoded: ", encoder.inverse_transform(predictions))
-
-        # writer = SummaryWriter("my_experiment")
-        # x = range(100)
-        # for i in x:
-        #     writer.add_scalar('y=2x', i * 2, i)
-        # writer.close()
 
     print('main close')
